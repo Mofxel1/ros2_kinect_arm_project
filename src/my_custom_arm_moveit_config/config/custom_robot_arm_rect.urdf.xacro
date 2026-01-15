@@ -5,14 +5,35 @@
   <material name="industrial_orange"><color rgba="1 0.5 0 1"/></material>
   <material name="joint_black"><color rgba="0.2 0.2 0.2 1"/></material>
 
-  <link name="base_link"/>
+  <link name="world"/>
+
+  <joint name="fixed_base" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.005" rpy="0 0 0"/>
+  </joint>
+
+  <link name="base_link">
+    <visual>
+      <geometry><box size="0.1 0.1 0.01"/></geometry>
+      <material name="metal_grey"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.1 0.1 0.01"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
 
   <joint name="joint1" type="revolute">
     <parent link="base_link"/>
     <child link="alt_kol"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0.01" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
-    <limit lower="-3.14" upper="3.14" effort="100" velocity="1.0"/>
+    <limit lower="-3.14" upper="3.14" effort="5000" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
   </joint>
 
   <link name="alt_kol">
@@ -37,7 +58,8 @@
     <child link="orta_kol"/>
     <origin xyz="0 0 0.24" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
-    <limit lower="0.0" upper="1.57" effort="100" velocity="1.0"/>
+    <limit lower="-1.57" upper="1.57" effort="5000" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
   </joint>
 
   <link name="orta_kol">
@@ -67,7 +89,8 @@
     <child link="ust_kol"/>
     <origin xyz="0 0 0.23" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
-    <limit lower="0.0" upper="2.09" effort="100" velocity="1.0"/>
+    <limit lower="-1.57" upper="2.09" effort="5000" velocity="10.0"/>
+    <dynamics damping="0.1" friction="0.1"/>
   </joint>
 
   <link name="ust_kol">
@@ -112,34 +135,34 @@
     </collision>
   </link>
 
-  <ros2_control name="FakeSystem" type="system">
+  <gazebo reference="base_link"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="alt_kol"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="orta_kol"><material>Gazebo/Orange</material></gazebo>
+  <gazebo reference="ust_kol"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="end_effector_point"><material>Gazebo/Red</material></gazebo>
+
+  <ros2_control name="GazeboSystem" type="system">
     <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
     
     <joint name="joint1">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="velocity"/>
+      <command_interface name="position"><param name="min">-3.14</param><param name="max">3.14</param></command_interface>
+      <state_interface name="position"/><state_interface name="velocity"/>
     </joint>
-
     <joint name="joint2">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="velocity"/>
+      <command_interface name="position"><param name="min">-1.57</param><param name="max">1.57</param></command_interface>
+      <state_interface name="position"/><state_interface name="velocity"/>
     </joint>
-
     <joint name="joint3">
-      <command_interface name="position"/>
-      <state_interface name="position">
-        <param name="initial_value">0.0</param>
-      </state_interface>
-      <state_interface name="velocity"/>
+      <command_interface name="position"><param name="min">-1.57</param><param name="max">2.09</param></command_interface>
+      <state_interface name="position"/><state_interface name="velocity"/>
     </joint>
   </ros2_control>
 
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>$(find my_custom_arm_moveit_config)/config/ros2_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
 </robot>
