@@ -1,0 +1,145 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="custom_robot_arm_rect">
+
+  <material name="metal_grey"><color rgba="0.7 0.7 0.7 1"/></material>
+  <material name="industrial_orange"><color rgba="1 0.5 0 1"/></material>
+  <material name="joint_black"><color rgba="0.2 0.2 0.2 1"/></material>
+
+  <link name="base_link"/>
+
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="alt_kol"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-3.14" upper="3.14" effort="100" velocity="1.0"/>
+  </joint>
+
+  <link name="alt_kol">
+    <inertial>
+      <origin xyz="0 0 0.1075" rpy="0 0 0"/>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.1075" rpy="0 0 0"/>
+      <geometry><box size="0.08 0.12 0.215"/></geometry>
+      <material name="metal_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.1075" rpy="0 0 0"/>
+      <geometry><box size="0.08 0.12 0.215"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint2" type="revolute">
+    <parent link="alt_kol"/>
+    <child link="orta_kol"/>
+    <origin xyz="0 0 0.24" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="1.57" effort="100" velocity="1.0"/>
+  </joint>
+
+  <link name="orta_kol">
+    <inertial>
+      <origin xyz="0 0 0.115" rpy="0 0 0"/>
+      <mass value="0.8"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/> 
+      <geometry><cylinder radius="0.03" length="0.085"/></geometry>
+      <material name="joint_black"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.115" rpy="0 0 0"/> 
+      <geometry><box size="0.055 0.055 0.23"/></geometry>
+      <material name="industrial_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.115" rpy="0 0 0"/> 
+      <geometry><box size="0.055 0.055 0.23"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint3" type="revolute">
+    <parent link="orta_kol"/>
+    <child link="ust_kol"/>
+    <origin xyz="0 0 0.23" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="2.09" effort="100" velocity="1.0"/>
+  </joint>
+
+  <link name="ust_kol">
+    <inertial>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <mass value="0.6"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.57 0 0"/>
+      <geometry><cylinder radius="0.03" length="0.06"/></geometry>
+      <material name="joint_black"/>
+    </visual>
+    <visual>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry><box size="0.05 0.06 0.20"/></geometry>
+      <material name="metal_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry><box size="0.05 0.06 0.20"/></geometry>
+    </collision>
+  </link>
+
+  <joint name="joint_ee" type="fixed">
+    <parent link="ust_kol"/>
+    <child link="end_effector_point"/>
+    <origin xyz="0 0 0.20" rpy="0 0 0"/>
+  </joint>
+  
+  <link name="end_effector_point">
+    <inertial>
+      <mass value="0.01"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+    <visual>
+      <geometry><sphere radius="0.02"/></geometry>
+      <material name="industrial_orange"/>
+    </visual>
+    <collision>
+      <geometry><sphere radius="0.02"/></geometry>
+    </collision>
+  </link>
+
+  <ros2_control name="FakeSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+    </hardware>
+    
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="joint3">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+</robot>
