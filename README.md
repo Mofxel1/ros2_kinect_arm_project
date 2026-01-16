@@ -56,13 +56,19 @@ Sistemi çalıştırmak için 3 farklı terminal açmanız gerekmektedir.
 
 **Terminal 1: Simülasyon ve MoveIt**
 Robotu, RViz arayüzünü ve MoveIt planlama sistemini başlatır.
+```bash
 source install/setup.bash
 ros2 launch my_custom_arm_moveit_config demo.launch.py
+ ```
 
 Terminal 2: Kamera Sürücüsü Kinect kamerasını (veya simülasyonunu) başlatır.
+```bash
 source install/setup.bash
 ros2 run kinect_ros2 kinect_ros2_node
+ ```
 
 Terminal 3: Robot Beyni (Otonom Kontrol) Görüntüyü işleyen ve robotu yöneten ana Python düğümünü başlatır.
+```bash
 source install/setup.bash
 ros2 run kinect_arm_control start
+ ```
