@@ -1,15 +1,11 @@
-# Derleme ve gecici dosyalar
+
 build/
 install/
 log/
 .colcon/
 .vscode/
 
-# Hazır Kütüphaneler (Bunları GitHub'a atma)
 src/interbotix_xsarm_description/
 src/kinect_ros2/
 src/libfreenect/
 
-# NOT: Git varsayılan olarak her şeyi alır, 
-# yukarıda yazdıklarımız hariç src içindeki 
-# kinect_arm_control ve moveit config otomatik dahil edilecektir.

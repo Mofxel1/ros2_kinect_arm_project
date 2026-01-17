@@ -1,0 +1,52 @@
+src/kinect_arm_control
+├── config
+├── description
+│   └── urdf
+│       └── my_custom_robot.urdf
+├── images
+├── launch
+│   └── start_system.launch.py
+├── resource
+│   └── kinect_arm_control
+├── scripts
+│   ├── detector_color.py
+│   ├── detector_yolo.py
+│   ├── __init__.py
+│   └── robot_brain.py
+├── test
+│   ├── test_copyright.py
+│   ├── test_flake8.py
+│   └── test_pep257.py
+├── weights
+├── package.xml
+├── README.md
+├── setup.cfg
+└── setup.py
+src/my_custom_arm_moveit_config
+├── config
+│   ├── custom_robot_arm_rect.ros2_control.xacro
+│   ├── custom_robot_arm_rect.srdf
+│   ├── custom_robot_arm_rect.urdf.xacro
+│   ├── initial_positions.yaml
+│   ├── joint_limits.yaml
+│   ├── kinematics.yaml
+│   ├── moveit_controllers.yaml
+│   ├── moveit.rviz
+│   ├── ompl_planning.yaml
+│   ├── pilz_cartesian_limits.yaml
+│   └── ros2_controllers.yaml
+├── launch
+│   ├── demo.launch.py
+│   ├── gazebo.launch.py
+│   ├── move_group.launch.py
+│   ├── moveit_planning.launch.py
+│   ├── moveit_rviz.launch.py
+│   ├── rsp.launch.py
+│   ├── setup_assistant.launch.py
+│   ├── spawn_controllers.launch.py
+│   ├── static_virtual_joint_tfs.launch.py
+│   └── warehouse_db.launch.py
+├── CMakeLists.txt
+└── package.xml
+
+2 directories, 23 files

@@ -24,8 +24,8 @@ setup(
         # Weights (Yapay zeka modelleri) klasörünü taşı
         (os.path.join('share', package_name, 'weights'), glob('weights/*')),
         
-        # Description (Eğer bu pakette URDF varsa)
-        (os.path.join('share', package_name, 'description'), glob('description/*')),
+        # Description klasörü altındaki URDF klasörünün içindekileri al
+        (os.path.join('share', package_name, 'description/urdf'), glob('description/urdf/*')),
 
         # Images (Eğer görsel varsa)
         (os.path.join('share', package_name, 'images'), glob('images/*')),
@@ -38,9 +38,10 @@ setup(
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
-        'console_scripts': [
-            # Buradaki isimle terminalden çağıracaksın: ros2 run kinect_arm_control start
-            'start = kinect_arm_control.robot_brain:main',
-        ],
-    },
+    'console_scripts': [
+        'brain = kinect_arm_control.robot_brain:main',
+        'detector_color = kinect_arm_control.detector_color:main',
+        'detector_yolo = kinect_arm_control.detector_yolo:main',
+    ],
+},
 )
