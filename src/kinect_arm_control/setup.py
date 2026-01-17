@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+import os
+from glob import glob # Dosyaları taramak için gerekli kütüphane
 
 package_name = 'kinect_arm_control'
 
@@ -10,21 +12,35 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        
+        # --- EKLEMELER BURADA BAŞLIYOR ---
+        
+        # Launch dosyalarını taşı
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        
+        # Config (ayar) dosyalarını taşı (YAML vb.)
+        (os.path.join('share', package_name, 'config'), glob('config/*')),
+        
+        # Weights (Yapay zeka modelleri) klasörünü taşı
+        (os.path.join('share', package_name, 'weights'), glob('weights/*')),
+        
+        # Description (Eğer bu pakette URDF varsa)
+        (os.path.join('share', package_name, 'description'), glob('description/*')),
+
+        # Images (Eğer görsel varsa)
+        (os.path.join('share', package_name, 'images'), glob('images/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
     maintainer='orhan',
     maintainer_email='orhanyldz987@gmail.com',
-    description='TODO: Package description',
+    description='Kinect ve Robot Kol Kontrol Paketi',
     license='TODO: License declaration',
-    extras_require={
-        'test': [
-            'pytest',
-        ],
-    },
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-	    'start = kinect_arm_control.robot_brain:main',
+            # Buradaki isimle terminalden çağıracaksın: ros2 run kinect_arm_control start
+            'start = kinect_arm_control.robot_brain:main',
         ],
     },
 )

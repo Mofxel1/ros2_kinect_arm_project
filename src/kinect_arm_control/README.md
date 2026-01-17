@@ -6,6 +6,14 @@ Bu proje, **ROS 2 Humble** üzerinde çalışan otonom bir robot kol simülasyon
 ![Python Badge](https://img.shields.io/badge/Language-Python3-yellow.svg)
 ![MoveIt Badge](https://img.shields.io/badge/Motion-MoveIt-orange.svg)
 
+## 🎥 Proje Demosu (Gerçek vs Simülasyon)
+
+Proje, **Dijital İkiz (Digital Twin)** mantığıyla çalışmaktadır. Simülasyon ortamında hesaplanan yörüngeler, gerçek robota eş zamanlı olarak aktarılır.
+
+| 🦾 Gerçek Robot (Real World) | 🖥️ Simülasyon (Gazebo/RViz) |
+| :---: | :---: |
+| ![Gerçek Robot](images/Kol1.gif) | ![Simülasyon](images/kol2.gif) |
+
 ## 🚀 Özellikler
 
 * **Görüntü İşleme (OpenCV):** RGB ve Derinlik (Depth) verilerini birleştirerek nesne tespiti.
