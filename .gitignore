@@ -1,11 +1,10 @@
-
 build/
 install/
 log/
-.colcon/
 .vscode/
-
-src/interbotix_xsarm_descriptions/
+__pycache__/
+*.pyc
+src/interbotix_xsarm_description/
 src/kinect_ros2/
 src/libfreenect/
-
+src/moveit2/
