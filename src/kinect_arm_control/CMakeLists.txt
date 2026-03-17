@@ -39,7 +39,9 @@ install(DIRECTORY description
 
 # 3. Python Scriptini (YOLO) Yükle (Kritik!)
 # Scriptin "scripts" klasöründe olduğunu varsayıyoruz.
-install(PROGRAMS scripts/detector_yolo.py
+install(PROGRAMS 
+  scripts/detector_yolo.py
+  scripts/teleop_terminal.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

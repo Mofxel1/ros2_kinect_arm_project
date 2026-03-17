@@ -1,52 +1,64 @@
 src/kinect_arm_control
-├── config
+├── CMakeLists.txt
 ├── description
+│   ├── meshes
+│   │   ├── base_link.STL
+│   │   ├── link_1.STL
+│   │   ├── link_2.STL
+│   │   └── link_3.STL
 │   └── urdf
-│       └── my_custom_robot.urdf
+│       ├── my_custom_robot.urdf
+│       ├── robot_montaj.csv
+│       └── robot_montaj.urdf
 ├── images
+│   ├── Kol1.gif
+│   └── kol2.gif
 ├── launch
-│   └── start_system.launch.py
+│   ├── debug_brain.launch.py
+│   ├── manual_control.launch.py
+│   ├── start_system.launch.py
+│   └── system_bringup.launch.py
+├── package.xml
 ├── resource
 │   └── kinect_arm_control
 ├── scripts
 │   ├── detector_color.py
 │   ├── detector_yolo.py
+│   ├── eye_node_mobile.py
+│   ├── eye_node.py
 │   ├── __init__.py
-│   └── robot_brain.py
-├── test
-│   ├── test_copyright.py
-│   ├── test_flake8.py
-│   └── test_pep257.py
-├── weights
-├── package.xml
-├── README.md
-├── setup.cfg
-└── setup.py
+│   ├── robot_brain.py
+│   ├── teleop_terminal.py
+│   └── yolov8n.pt
+├── src
+│   └── cpp_brain.cpp
+└── test
+    ├── test_copyright.py
+    ├── test_flake8.py
+    └── test_pep257.py
 src/my_custom_arm_moveit_config
+├── CMakeLists.txt
 ├── config
-│   ├── custom_robot_arm_rect.ros2_control.xacro
-│   ├── custom_robot_arm_rect.srdf
-│   ├── custom_robot_arm_rect.urdf.xacro
 │   ├── initial_positions.yaml
 │   ├── joint_limits.yaml
 │   ├── kinematics.yaml
 │   ├── moveit_controllers.yaml
 │   ├── moveit.rviz
-│   ├── ompl_planning.yaml
 │   ├── pilz_cartesian_limits.yaml
-│   └── ros2_controllers.yaml
+│   ├── robot_montaj.ros2_control.xacro
+│   ├── robot_montaj.srdf
+│   ├── robot_montaj.urdf.xacro
+│   ├── ros2_controllers.yaml
+│   └── sensors_3d.yaml
 ├── launch
 │   ├── demo.launch.py
-│   ├── gazebo.launch.py
 │   ├── move_group.launch.py
-│   ├── moveit_planning.launch.py
 │   ├── moveit_rviz.launch.py
 │   ├── rsp.launch.py
 │   ├── setup_assistant.launch.py
 │   ├── spawn_controllers.launch.py
 │   ├── static_virtual_joint_tfs.launch.py
 │   └── warehouse_db.launch.py
-├── CMakeLists.txt
 └── package.xml
 
-2 directories, 23 files
+2 directories, 21 files

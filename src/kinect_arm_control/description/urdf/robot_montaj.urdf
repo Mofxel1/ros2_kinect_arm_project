@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="robot_montaj">
+
+  <link name="world"/>
+  <joint name="fixed_to_world" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.0057354 0.00028844 0.0028305" rpy="0 0 0" />
+      <mass value="2.0617" />
+      <inertia ixx="0.0063182" ixy="1.6404E-37" ixz="-1.8048E-35" iyy="0.0063182" iyz="-1.5804E-35" izz="0.010953" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="1.5708 0 0" />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <link name="link_1">
+    <inertial>
+      <origin xyz="0.001866 -0.005431 0.073379" rpy="0 0 0" />
+      <mass value="1.0475" />
+      <inertia ixx="0.0039029" ixy="4.5787E-10" ixz="3.2618E-09" iyy="0.0044332" iyz="-3.0406E-10" izz="0.0025452" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 -3.1416"  />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/link_1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 -3.1416"  />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/link_1.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint0" type="revolute">
+    <origin xyz="0 0 0" rpy="0 0 0"  />
+    <parent link="base_link" />
+    <child link="link_1" />
+    <axis xyz="0 0 1" />
+    <limit lower="-3.14" upper="3.14" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <link name="link_2">
+    <inertial>
+      <origin xyz="0.11978 0.01159 -0.001866" rpy="0 0 0" />
+      <mass value="1.1572" />
+      <inertia ixx="0.0015363" ixy="2.3965E-05" ixz="4.0545E-09" iyy="0.007344" iyz="-2.4022E-10" izz="0.006733" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/link_2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/link_2.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint1" type="revolute">
+    <origin xyz="0 -0.005431 0.18283" rpy="1.5708 -0.36225 -1.5708" />
+    <parent link="link_1" />
+    <child link="link_2" />
+    <axis xyz="0 0 1" />
+    <limit lower="0.0" upper="0.80" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <link name="link_3">
+    <inertial>
+      <origin xyz="0.056936 -1.1651E-07 0.001866" rpy="0 0 0" />
+      <mass value="0.56572" />
+      <inertia ixx="0.00033639" ixy="6.444E-09" ixz="3.9191E-09" iyy="0.0020474" iyz="4.0377E-11" izz="0.0020274" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/link_3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.79216 0.81961 0.93333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://kinect_arm_control/description/meshes/link_3.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="joint2" type="revolute">
+    <origin xyz="0.22 0 0" rpy="-3.1416 0 -1.6666" />
+    <parent link="link_2" />
+    <child link="link_3" />
+    <axis xyz="0 0 1" />
+    <limit lower="-1.0" upper="0.1" effort="100.0" velocity="1.0"/>
+  </joint>
+
+  <link name="tcp_link">
+    <inertial>
+      <mass value="0.001" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.005" />
+      </geometry>
+      <material name="orange">
+        <color rgba="1.0 0.5 0.0 1.0" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <sphere radius="0.005" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="tcp_joint" type="fixed">
+    <parent link="link_3" />
+    <child link="tcp_link" />
+    <origin xyz="0.20 0 0" rpy="0 0 0" /> 
+  </joint>
+
+  <ros2_control name="GazeboSystem" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="joint0">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint1">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+    <joint name="joint2">
+      <command_interface name="position"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+  <gazebo>
+    <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
+      <parameters>/home/orhan/ros2_ws/src/my_custom_arm_moveit_config/config/ros2_controllers.yaml</parameters>
+    </plugin>
+  </gazebo>
+
+</robot>

@@ -1,13 +1,13 @@
 moveit_setup_assistant_config:
   urdf:
-    package: interbotix_xsarm_descriptions
-    relative_path: urdf/my_custom_robot.urdf
+    package: kinect_arm_control
+    relative_path: description/urdf/robot_montaj.urdf
   srdf:
-    relative_path: config/custom_robot_arm_rect.srdf
+    relative_path: config/robot_montaj.srdf
   package_settings:
-    author_name: orhan
-    author_email: 19orcan07@gmail.com
-    generated_timestamp: 1768462033
+    author_name: Orhan
+    author_email: orhanyldz987@gmail.com
+    generated_timestamp: 1773667508
   control_xacro:
     command:
       - position

@@ -22,19 +22,29 @@ class YoloDetector(Node):
         
         self.latest_depth_image = None
         self.target_class = 'cell phone' 
-        self.min_confidence = 0.60
+        self.min_confidence = 0.40
         
         # Kamera Parametreleri
         self.fx, self.fy = 554.25, 554.25
         self.cx, self.cy = 320.0, 240.0
 
-        # Titreme Filtresi
-        self.last_sent_x = 0.0
-        self.last_sent_y = 0.0
-        self.last_sent_z = 0.0
-        self.movement_threshold = 0.02 
+        # ==========================================
+        # STABİLİTE (DUR-KALK) FİLTRESİ
+        # ==========================================
+        self.candidate_x = 0.0
+        self.candidate_y = 0.0
+        self.candidate_z = 0.0
         
-        self.get_logger().info("Eksen Kalibrasyonu Modu Aktif...")
+        self.stable_count = 0
+        self.required_stable_frames = 15  
+        self.stability_threshold = 0.015  
+        
+        self.last_published_x = 0.0
+        self.last_published_y = 0.0
+        self.last_published_z = 0.0
+        self.publish_threshold = 0.01     
+        
+        self.get_logger().info("✅ 42cm TCP Menzilli Stabil Mod Aktif (Max Uzanma: 40cm)...")
 
     def depth_callback(self, msg):
         try:
@@ -66,60 +76,70 @@ class YoloDetector(Node):
                             
                             if depth_val > 0 and not np.isnan(depth_val):
                                 # 1. KAMERA SAF VERİSİ
-                                Z_cam = depth_val / 1000.0          # Derinlik (Kameradan uzaklaşma)
-                                X_cam = (cx - self.cx) * Z_cam / self.fx # Kamera Sağı (+) / Solu (-)
-                                Y_cam = (cy - self.cy) * Z_cam / self.fy # Kamera Aşağısı (+) / Yukarısı (-)
+                                Z_cam = depth_val / 1000.0          
+                                X_cam = (cx - self.cx) * Z_cam / self.fx 
+                                Y_cam = (cy - self.cy) * Z_cam / self.fy 
                                 
                                 # ==========================================
-                                #       BURAYI DENEYEREK BULACAĞIZ
+                                # 2. UZAYSAL DÖNÜŞÜM
                                 # ==========================================
+                                X_robot = Z_cam - 0.50   
+                                Y_robot = -X_cam         
+                                Z_robot = -Y_cam + 0.30  
+
+                                # ==========================================
+                                # 3. YENİ 42 CM'LİK MENZİLE GÖRE SINIRLAR
+                                # L2(22cm) + L3/TCP(20cm) = 42cm maksimum erişim!
+                                # Güvenlik payı ile robotu en fazla 40cm ileri itiyoruz.
+                                # ==========================================
+                                X_robot = max(0.10, min(X_robot, 0.40))  
+                                Z_robot = max(0.02, min(Z_robot, 0.45))  
+
+                                # ==========================================
+                                # 4. STABİLİTE (DURMA) KONTROLÜ
+                                # ==========================================
+                                dist_to_candidate = math.sqrt((X_robot - self.candidate_x)**2 + 
+                                                              (Y_robot - self.candidate_y)**2 + 
+                                                              (Z_robot - self.candidate_z)**2)
                                 
-                                # SENARYO 1: Kamera Robotun ARKASINDA duruyor (-X yönünde)
-                                # İleri itince Robot X artmalı
-                                # Sağa çekince Robot Y azalmalı (veya artmalı)
-                                # Yukarı çekince Robot Z artmalı
-                                
-                                # Mevcut ayar (Bunu dene):
-                                X_robot = Z_cam - 0.50   # Derinlik -> Robot İleri (X)
-                                Y_robot = -X_cam         # Kamera Sağı -> Robot Sağı (-Y)
-                                Z_robot = -Y_cam + 0.20  # Kamera Yukarısı -> Robot Yukarısı (Z)
-
-                                # ------------------------------------------
-                                # SENARYO 2: (Eğer robotun sağı solu ters ise bunu aç)
-                                # Y_robot = X_cam 
-                                # ------------------------------------------
-                                
-                                # ------------------------------------------
-                                # SENARYO 3: (Eğer İleri itince robot yukarı kalkıyorsa bunu aç)
-                                # X_robot = -Y_cam + 0.30  
-                                # Z_robot = Z_cam - 0.20
-                                # ------------------------------------------
-
-                                # Güvenlik Sınırları (Simülasyonda uçup gitmesin)
-                                X_robot = max(0.10, min(X_robot, 0.60)) # Min 10cm, Max 60cm ileri
-                                Z_robot = max(-0.20, min(Z_robot, 0.50)) # Yerden çok aşağı veya yukarı gitmesin
-
-                                # Filtre ve Gönderim
-                                dist = math.sqrt((X_robot - self.last_sent_x)**2 + (Y_robot - self.last_sent_y)**2 + (Z_robot - self.last_sent_z)**2)
-
-                                if dist > self.movement_threshold:
-                                    point_msg = Point()
-                                    point_msg.x, point_msg.y, point_msg.z = float(X_robot), float(Y_robot), float(Z_robot)
-                                    self.publisher_.publish(point_msg)
+                                if dist_to_candidate < self.stability_threshold:
+                                    self.stable_count += 1
+                                    color = (0, 255, 255) 
+                                    status_text = "BEKLIYOR..."
                                     
-                                    self.last_sent_x = X_robot
-                                    self.last_sent_y = Y_robot
-                                    self.last_sent_z = Z_robot
-                                    
-                                    # HANGİ EKSENİN HANGİSİ OLDUĞUNU GÖRMEK İÇİN LOG
-                                    print(f"🎯 GONDERILEN: İleri(X):{X_robot:.2f} | Yan(Y):{Y_robot:.2f} | Yükseklik(Z):{Z_robot:.2f}")
-                                    color = (0, 255, 0)
+                                    if self.stable_count >= self.required_stable_frames:
+                                        dist_to_published = math.sqrt((X_robot - self.last_published_x)**2 + 
+                                                                      (Y_robot - self.last_published_y)**2 + 
+                                                                      (Z_robot - self.last_published_z)**2)
+                                        
+                                        if dist_to_published > self.publish_threshold:
+                                            point_msg = Point()
+                                            point_msg.x, point_msg.y, point_msg.z = float(X_robot), float(Y_robot), float(Z_robot)
+                                            self.publisher_.publish(point_msg)
+                                            
+                                            self.last_published_x = X_robot
+                                            self.last_published_y = Y_robot
+                                            self.last_published_z = Z_robot
+                                            
+                                            print(f"🚀 GONDERILDI -> X:{X_robot:.2f} | Y:{Y_robot:.2f} | Z:{Z_robot:.2f}")
+                                            color = (0, 255, 0) 
+                                            status_text = "GONDERILDI!"
+                                        else:
+                                            color = (255, 0, 0) 
+                                            status_text = "ALINMASI BEKLENIYOR"
                                 else:
-                                    color = (0, 255, 255)
+                                    self.candidate_x = X_robot
+                                    self.candidate_y = Y_robot
+                                    self.candidate_z = Z_robot
+                                    self.stable_count = 0
+                                    color = (0, 0, 255) 
+                                    status_text = "HAREKET HALINDE"
 
+                                # Ekrana Durum Çizimi
                                 cv2.rectangle(cv_image, (x1, y1), (x2, y2), color, 2)
                                 label = f"X:{X_robot:.2f} Y:{Y_robot:.2f} Z:{Z_robot:.2f}" 
-                                cv2.putText(cv_image, label, (x1, y1-10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                                cv2.putText(cv_image, label, (x1, y1-25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                                cv2.putText(cv_image, status_text, (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             cv2.imshow("YOLO Brain Input", cv_image)
             cv2.waitKey(1)

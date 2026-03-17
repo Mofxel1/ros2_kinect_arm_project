@@ -21,7 +21,8 @@ def generate_launch_description():
     moveit_config_pkg = "my_custom_arm_moveit_config"
     moveit_config_pkg_share = get_package_share_directory(moveit_config_pkg)
     
-    xacro_file_path = os.path.join(moveit_config_pkg_share, "config", "custom_robot_arm_rect.urdf.xacro")
+    # NOT: URDF yolunu önceki tespitimize göre robot_montaj.urdf olarak güncelledim.
+    xacro_file_path = os.path.join(get_package_share_directory("kinect_arm_control"), "description", "urdf", "robot_montaj.urdf")
     
     moveit_config_builder = MoveItConfigsBuilder(moveit_config_pkg, package_name=moveit_config_pkg) \
         .robot_description(file_path=xacro_file_path)
@@ -51,22 +52,15 @@ def generate_launch_description():
     controller_config = os.path.join(moveit_config_pkg_share, "config", "ros2_controllers.yaml")
 
     # --- 1. KINECT SÜRÜCÜSÜ ---
-    # DEBUG MODU: Manuel başlatacağımız için kapattık.
-    # kinect_driver = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource([
-    #         os.path.join(get_package_share_directory('kinect_ros2'), 'launch', 'kinect_ros2.launch.py')
-    #     ])
-    # )
+    # DEBUG MODU: Manuel başlatacağımız için kapalı.
 
-    # --- 2. STATIC TRANSFORM ---
-    # Kamera ile Robot arasındaki fiziksel bağlantı (Görselleştirme için)
-    # Eğer kamerayı robotun arkasına koyduysan buradaki değerleri güncellemelisin.
-    # Örn: Robotun 50cm arkası (-0.5), 0.5m yukarısı
+    # --- 2. STATIC TRANSFORM (DÜZELTİLDİ) ---
+    # Kamera ile Robot arasındaki fiziksel bağlantı: 50cm arka (-0.5), 30cm yukarı (0.3)
     static_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='kinect_to_robot_tf',
-        arguments=['-0.5', '0.0', '0.5', '0.0', '0.0', '0.0', 'base_link', 'kinect_link']
+        arguments=['-0.5', '0.0', '0.3', '0.0', '0.0', '0.0', 'base_link', 'kinect_link']
     )
 
     # 3. Gazebo (Simülasyon Ortamı)
@@ -75,11 +69,11 @@ def generate_launch_description():
         output='screen'
     )
 
-    # 4. Robotu Simülasyona Ekleme
+    # 4. Robotu Simülasyona Ekleme (DÜZELTİLDİ: Titremeyi önlemek için Z ekseninde 5cm havada doğuruyoruz)
     spawn_entity = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
-        arguments=['-topic', 'robot_description', '-entity', 'my_robot'],
+        arguments=['-topic', 'robot_description', '-entity', 'my_robot', '-z', '0.05'],
         output='screen'
     )
 
@@ -131,39 +125,13 @@ def generate_launch_description():
         arguments=["my_arm_controller", "--controller-manager", "/controller_manager", "--param-file", controller_config],
     )
 
-    # 9. C++ Beyin
-    # DEBUG MODU: Manuel başlatacağımız için kapattık (ros2 run kinect_arm_control cpp_brain)
-    # cpp_brain_node = Node(
-    #     package="kinect_arm_control",
-    #     executable="cpp_brain",
-    #     output="screen",
-    #     parameters=[
-    #         moveit_config.robot_description,
-    #         moveit_config.robot_description_semantic,
-    #         moveit_config.robot_description_kinematics,
-    #         planning_pipelines_config,
-    #         {"use_sim_time": True}
-    #     ]
-    # )
-
-    # 10. Eye Node (YOLO)
-    # DEBUG MODU: Manuel başlatacağımız için kapattık (python3 detector_yolo.py)
-    # eye_node = Node(
-    #     package="kinect_arm_control",
-    #     executable="detector_yolo.py", # İsim düzeltildi
-    #     output="screen",
-    #     parameters=[{"use_sim_time": True}]
-    # )
-
     return LaunchDescription([
         static_tf,
-        # kinect_driver, # Manuel
         gazebo,
         robot_state_publisher,
         run_move_group_node,
         rviz_node,
         spawn_entity,
-        # eye_node,      # Manuel
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=spawn_entity,
@@ -175,6 +143,5 @@ def generate_launch_description():
                 target_action=joint_state_broadcaster_spawner,
                 on_exit=[arm_controller_spawner],
             )
-        ),
-        # cpp_brain_node'u da manuel başlatacağız, o yüzden buradan kaldırdık
+        )
     ])

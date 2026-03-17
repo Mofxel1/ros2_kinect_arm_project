@@ -1,7 +1,7 @@
 #include <memory>
 #include <chrono>
 #include <cmath>
-#include <algorithm> // std::clamp için
+#include <algorithm>
 #include <rclcpp/rclcpp.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <geometry_msgs/msg/point.hpp>
@@ -21,7 +21,7 @@ public:
     joint_state_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
       "/joint_states", 10, std::bind(&CppBrainNode::joint_state_callback, this, _1));
     
-    RCLCPP_INFO(this->get_logger(), "🧠 C++ Beyin (Geometrik IK + Limit Koruma) Baslatiliyor...");
+    RCLCPP_INFO(this->get_logger(), "🧠 C++ Beyin: Eksen, 90-Derece ve SolidWorks Kalibrasyonlu IK Baslatiliyor...");
   }
 
   void joint_state_callback(const sensor_msgs::msg::JointState::SharedPtr msg) {
@@ -35,70 +35,79 @@ public:
 
   void init_moveit() {
     move_group_ = std::make_shared<moveit::planning_interface::MoveGroupInterface>(shared_from_this(), "my_arm");
-    
-    // CHOMP KULLANMAYA DEVAM EDIYORUZ
     move_group_->setPlanningPipelineId("chomp"); 
-    
     move_group_->setMaxVelocityScalingFactor(0.5);
     move_group_->setMaxAccelerationScalingFactor(0.5);
     move_group_->setPlanningTime(1.0);
-    
-    // CHOMP bazen başlangıç durumunu "çarpışmada" sanabilir, bunu düzeltmek için:
     move_group_->setStartStateToCurrentState();
-    
     move_group_->startStateMonitor(2.0);
-    RCLCPP_INFO(this->get_logger(), "🚀 MoveIt Hazir! (CHOMP Aktif)");
+    RCLCPP_INFO(this->get_logger(), "🚀 MoveIt Hazir!");
   }
 
-  // --- GELİŞMİŞ IK ÇÖZÜCÜ (LİMİT KONTROLLÜ) ---
-  bool solve_ik(double x, double y, double z, std::vector<double>& angles) {
-      const double L1 = 0.215;
-      const double L2 = 0.230;
-      const double L3 = 0.200;
+  // --- EKSEN DÜZELTMELİ, 90 DERECE OFSETLİ VE KALİBRASYONLU IK ÇÖZÜCÜ ---
+  bool solve_ik(double target_x, double target_y, double target_z, std::vector<double>& angles) {
+      const double L1 = 0.183; 
+      const double L2 = 0.220; 
+      const double L3 = 0.200; 
 
-      // URDF LİMİTLERİ (Radyan cinsinden)
-      // Joint 1: -3.14 ile 3.14 arası
-      // Joint 2: 0.0 ile 1.57 arası
-      // Joint 3: 0.0 ile 2.09 arası
-      const double J2_MIN = 0.0, J2_MAX = 1.57;
-      const double J3_MIN = 0.0, J3_MAX = 2.09;
+      // Robotunun gerçek fiziksel motor limitleri (Radyan)
+      // Eger ofsetten dolayi negatiflere inmesi gerekirse J2_MIN'i genisletebiliriz.
+      const double J2_MIN = -0.50,  J2_MAX = 0.80; 
+      const double J3_MIN = -1.0, J3_MAX = 0.10;
 
       try {
-          // 1. Taban Açısı (Theta 1)
+          // ========================================================
+          // 1. EKSEN DÜZELTMESİ (SolidWorks Yön Ofseti)
+          // ========================================================
+          double x = target_y; 
+          double y = target_x; 
+          double z = target_z;
+
           double theta1 = std::atan2(y, x);
 
-          // 2. Geometrik Hesaplamalar
+          // 2. Mesafeler ve Hipotenüs (D)
           double r = std::sqrt(x*x + y*y);
           double z_offset = z - L1;
           double D = std::sqrt(r*r + z_offset*z_offset);
-          double max_reach = L2 + L3;
-
-          if (D > max_reach) {
-              D = max_reach - 0.001; // Tam sınıra dayanmaması için ufak pay
+          
+          if (D > (L2 + L3)) {
+              D = L2 + L3 - 0.001; 
           }
 
-          // Kosinüs Teoremi (Dirsek - Joint 3)
-          double cos_elbow = (L2*L2 + L3*L3 - D*D) / (2 * L2 * L3);
-          cos_elbow = std::clamp(cos_elbow, -1.0, 1.0);
-          double theta3 = M_PI - std::acos(cos_elbow);
+          // 3. İç Açılar (Gama: Dirsek iç açısı, Alfa: Omuz iç açısı)
+          double cos_gamma = std::clamp((L2*L2 + L3*L3 - D*D) / (2 * L2 * L3), -1.0, 1.0);
+          double gamma = std::acos(cos_gamma);
 
-          // Omuz Açısı (Omuz - Joint 2)
+          double cos_alpha = std::clamp((L2*L2 + D*D - L3*L3) / (2 * L2 * D), -1.0, 1.0);
+          double alpha = std::acos(cos_alpha);
           double beta = std::atan2(z_offset, r);
-          double cos_alpha = (L2*L2 + D*D - L3*L3) / (2 * L2 * D);
-          cos_alpha = std::clamp(cos_alpha, -1.0, 1.0);
-          double theta2 = (M_PI / 2.0) - (beta + std::acos(cos_alpha));
 
-          // --- KRİTİK NOKTA: AÇILARI URDF LİMİTLERİNE SIKIŞTIR ---
+          // ========================================================
+          // 4. EFSANEVİ EŞLEŞTİRME VE SOLIDWORKS KALİBRASYONU
+          // ========================================================
           
-          // Joint 2 Limitleme
+          // Saf Matematiksel Açılar
+          double raw_theta2 = beta + alpha; 
+          double raw_theta3 = (M_PI / 2.0) - gamma; 
+
+          // URDF İÇİNDEKİ GİZLİ AÇILARI (OFFSET) SİLME
+          // Robotun hep havada kalmasına sebep olan ~20.7 derecelik kaymayı siliyoruz
+          double J2_OFFSET = 0.362; 
+          double J3_OFFSET = 0.000; 
+
+          // Kalibre Edilmiş Nihai Açılar
+          double theta2 = raw_theta2 - J2_OFFSET; 
+          double theta3 = raw_theta3 - J3_OFFSET; 
+
+          RCLCPP_INFO(this->get_logger(), "🔍 Kalibre IK -> J1: %.2f | J2: %.2f | J3: %.2f", theta1, theta2, theta3);
+
+          // --- MOTORLARI YAKMAMAK İÇİN LİMİTLERE SIKIŞTIR ---
           if (theta2 > J2_MAX) theta2 = J2_MAX;
           if (theta2 < J2_MIN) theta2 = J2_MIN;
 
-          // Joint 3 Limitleme
           if (theta3 > J3_MAX) theta3 = J3_MAX;
           if (theta3 < J3_MIN) theta3 = J3_MIN;
 
-          // Sonuçları Kaydet
           angles.clear();
           angles.push_back(theta1);
           angles.push_back(theta2);
@@ -113,8 +122,6 @@ public:
 private:
   void topic_callback(const geometry_msgs::msg::Point::SharedPtr msg) {
     if (!robot_ready_ || !move_group_ || is_moving_) return;
-    
-    // Time Sync Koruması
     if(!move_group_->getCurrentState(1.0)) return; 
 
     is_moving_ = true;
@@ -122,21 +129,15 @@ private:
     std::vector<double> target_joints;
     if (solve_ik(msg->x, msg->y, msg->z, target_joints)) {
         
-        RCLCPP_INFO(this->get_logger(), "📐 IK (Limitli): J1:%.2f J2:%.2f J3:%.2f", 
-            target_joints[0], target_joints[1], target_joints[2]);
-
         move_group_->setJointValueTarget(target_joints);
-        
         moveit::planning_interface::MoveGroupInterface::Plan my_plan;
         
         if (move_group_->plan(my_plan) == moveit::core::MoveItErrorCode::SUCCESS) {
-            RCLCPP_INFO(this->get_logger(), "✅ CHOMP Onayladi! Gidiliyor...");
+            RCLCPP_INFO(this->get_logger(), "✅ CHOMP Onayladi! Hedefe Gidiliyor...");
             move_group_->execute(my_plan);
         } else {
-            RCLCPP_WARN(this->get_logger(), "⚠️ CHOMP Plani Reddedildi (Limitler zorlanmis olabilir)");
+            RCLCPP_WARN(this->get_logger(), "⚠️ CHOMP Plani Reddedildi (Limit Disi Uzanma Testi)");
         }
-    } else {
-        RCLCPP_ERROR(this->get_logger(), "❌ IK Hesaplama Hatasi");
     }
     
     unlock_timer_ = this->create_wall_timer(2000ms, [this]() {
