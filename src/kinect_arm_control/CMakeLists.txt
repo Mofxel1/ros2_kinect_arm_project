@@ -23,6 +23,16 @@ ament_target_dependencies(cpp_brain
   sensor_msgs
 )
 
+# YENI DINAMIK BEYIN ICIN DERLEME KURALLARI
+add_executable(dynamic_brain_node src/dynamic_brain_node.cpp)
+ament_target_dependencies(dynamic_brain_node 
+  rclcpp 
+  moveit_ros_planning_interface 
+  geometry_msgs
+  moveit_msgs 
+  sensor_msgs 
+  urdf
+)
 # ---------------------------------------------------------
 # KURULUM (INSTALL) AYARLARI
 # ---------------------------------------------------------
@@ -46,7 +56,9 @@ install(PROGRAMS
 )
 
 # 4. Derlenen C++ Node'unu Yükle
-install(TARGETS cpp_brain
+install(TARGETS 
+  cpp_brain
+  dynamic_brain_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

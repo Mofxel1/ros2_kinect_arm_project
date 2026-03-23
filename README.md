@@ -60,7 +60,8 @@ src/kinect_arm_control
 │   ├── teleop_terminal.py
 │   └── yolov8n.pt
 ├── src
-│   └── cpp_brain.cpp
+│   └── cpp_brain.cpp	
+│   └── dynamic_brain_node.cpp
 └── test
     ├── test_copyright.py
     ├── test_flake8.py
@@ -152,10 +153,16 @@ Tek Komutla Başlatma (Önerilen):
 
 ```bash
 
-source install/setup.bash
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src
-ros2 launch kinect_arm_control system_bringup.launch.py
+    source install/setup.bash
+    export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src
+    ros2 launch kinect_arm_control system_bringup.launch.py
 ```
 
+Kamera Olmadan Konum Gönderme:
+
+```bash
+
+    ros2 topic pub -1 /camera/target_coords geometry_msgs/msg/Point "{x: 0.40, y: 0.0, z: 0.2}
+```
 
 Geliştirici: [Mofxel1]

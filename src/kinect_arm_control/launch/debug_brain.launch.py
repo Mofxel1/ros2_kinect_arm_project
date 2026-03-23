@@ -23,7 +23,8 @@ def generate_launch_description():
     # 3. BRAIN NODE (C++ Beyni)
     cpp_brain_node = Node(
         package="kinect_arm_control",
-        executable="cpp_brain",
+        # executable="cpp_brain",           # <--- ESKİ SABİT BEYİN (Bunu yorum satırı yap)
+        executable="dynamic_brain_node",    # <--- YENİ DİNAMİK BEYİN (Bunu ekle)
         output="screen",
         parameters=[
             moveit_config.robot_description,
