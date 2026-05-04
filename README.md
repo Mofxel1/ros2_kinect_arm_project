@@ -111,38 +111,33 @@ src/my_custom_arm_moveit_config
 
 Bu projeyi kendi bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin:
 
-    Çalışma Alanını Oluşturun:
+Çalışma Alanını Oluşturun:
     
 ```bash
-
     mkdir -p ~/ros2_ws/src
     cd ~/ros2_ws/src
 ```
 
-    Depoyu Klonlayın:
-    
+Depoyu Klonlayın:
 ```bash
-
     git clone https://github.com/Mofxel1/ros2_kinect_arm_project.git .
 ```
 
-    (Not: Eğer sadece kaynak kodları alacaksanız kinect_arm_control ve my_custom_arm_moveit_config klasörlerini almanız yeterlidir.)
+(Not: Eğer sadece kaynak kodları alacaksanız kinect_arm_control ve my_custom_arm_moveit_config klasörlerini almanız yeterlidir.)
 
-    Gerekli Bağımlılıkları Yükleyin:
+Gerekli Bağımlılıkları Yükleyin:
     
 ```bash
-
-    sudo apt update
-    sudo apt install ros-humble-moveit ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-cv-bridge
-    pip install ultralytics  # YOLO için
+sudo apt update
+sudo apt install ros-humble-moveit ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-cv-bridge
+pip install ultralytics  # YOLO için
 ```
-    Derleyin:
+Derleyin:
     
 ```bash
-
-    cd ~/ros2_ws
-    colcon build --symlink-install
-    source install/setup.bash
+cd ~/ros2_ws
+colcon build --symlink-install
+source install/setup.bash
 ```
 
 ## ▶️ Nasıl Çalıştırılır?
@@ -152,17 +147,15 @@ Projeyi çalıştırmak için karmaşık terminal işlemlerine gerek yoktur. Haz
 Tek Komutla Başlatma (Önerilen):
 
 ```bash
-
-    source install/setup.bash
-    export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src
-    ros2 launch kinect_arm_control system_bringup.launch.py
+source install/setup.bash
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src
+ros2 launch kinect_arm_control system_bringup.launch.py
 ```
 
 Kamera Olmadan Konum Gönderme:
 
 ```bash
-
-    ros2 topic pub -1 /camera/target_coords geometry_msgs/msg/Point "{x: 0.40, y: 0.0, z: 0.2}
+ros2 topic pub -1 /camera/target_coords geometry_msgs/msg/Point "{x: 0.40, y: 0.0, z: 0.2}"
 ```
 
 Geliştirici: [Mofxel1]

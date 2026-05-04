@@ -14,14 +14,16 @@ class YoloDetector(Node):
         super().__init__('detector_yolo')
         
         self.publisher_ = self.create_publisher(Point, '/camera/target_coords', 10)
-        self.model = YOLO("yolov8n.pt") 
+        # Arkadaşının model dosyasının yolu
+        self.model = YOLO("/home/orhan/ros2_ws/src/kinect_arm_control/scripts/best.pt") 
         self.bridge = CvBridge()
         
-        self.image_sub = self.create_subscription(Image, '/kinect/image_raw', self.image_callback, 10)
-        self.depth_sub = self.create_subscription(Image, '/kinect/depth/image_raw', self.depth_callback, 10)
+        # Topic isimleri düzeltilmiş hali
+        self.image_sub = self.create_subscription(Image, '/image_raw', self.image_callback, 10)
+        self.depth_sub = self.create_subscription(Image, '/depth/image_raw', self.depth_callback, 10)
         
         self.latest_depth_image = None
-        self.target_class = 'cell phone' 
+        self.target_class = 'plastik' 
         self.min_confidence = 0.40
         
         # Kamera Parametreleri
@@ -72,9 +74,24 @@ class YoloDetector(Node):
                         cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
                         
                         if 0 <= cx < w_depth and 0 <= cy < h_depth:
-                            depth_val = self.latest_depth_image[cy, cx]
+                            # ==========================================
+                            # YENİ EKLENEN "BALIK AĞI" (MEDYAN) FİLTRESİ
+                            # ==========================================
+                            # Merkezin etrafındaki 10x10'luk alanı kopyala
+                            y_min = max(0, cy - 5)
+                            y_max = min(h_depth, cy + 5)
+                            x_min = max(0, cx - 5)
+                            x_max = min(w_depth, cx + 5)
                             
-                            if depth_val > 0 and not np.isnan(depth_val):
+                            roi = self.latest_depth_image[y_min:y_max, x_min:x_max]
+                            
+                            # Sadece 0'dan büyük ve geçerli (NaN olmayan) pikselleri ayıkla
+                            valid_depths = roi[(roi > 0) & (~np.isnan(roi))]
+                            
+                            # Eğer en az 1 tane bile sağlam piksel varsa medyanını al
+                            if len(valid_depths) > 0:
+                                depth_val = float(np.median(valid_depths))
+                                
                                 # 1. KAMERA SAF VERİSİ
                                 Z_cam = depth_val / 1000.0          
                                 X_cam = (cx - self.cx) * Z_cam / self.fx 
@@ -89,8 +106,6 @@ class YoloDetector(Node):
 
                                 # ==========================================
                                 # 3. YENİ 42 CM'LİK MENZİLE GÖRE SINIRLAR
-                                # L2(22cm) + L3/TCP(20cm) = 42cm maksimum erişim!
-                                # Güvenlik payı ile robotu en fazla 40cm ileri itiyoruz.
                                 # ==========================================
                                 X_robot = max(0.10, min(X_robot, 0.40))  
                                 Z_robot = max(0.02, min(Z_robot, 0.45))  

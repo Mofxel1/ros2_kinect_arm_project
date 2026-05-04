@@ -18,8 +18,8 @@ public:
   // =======================================================
   // Kol çok aşağıda kalıyorsa OMUZ ofsetini KÜÇÜLT.
   // Kol çok geride (kısa) kalıyorsa DİRSEK açısını KÜÇÜLT.
-  double OMUZ_PITCH_OFFSET = 0.330;  // Eski URDF değeri: 0.362
-  double DIRSEK_SARKMA_ACISI = 1.550; // Eski varsayılan: 1.570
+  double OMUZ_PITCH_OFFSET = 0.345;  // Eski URDF değeri: 0.362
+  double DIRSEK_SARKMA_ACISI = 1.510; // Eski varsayılan: 1.570
   // =======================================================
 
   CppBrainNode() : Node("dynamic_brain_node", rclcpp::NodeOptions().parameter_overrides({rclcpp::Parameter("use_sim_time", true)})), 
