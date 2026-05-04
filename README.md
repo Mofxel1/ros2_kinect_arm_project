@@ -21,6 +21,7 @@ Proje, **Dijital İkiz (Digital Twin)** mantığıyla çalışmaktadır. Simüla
 * **Hareket Planlama (MoveIt 2):** Engellerden kaçınan güvenli yol planlaması.
 * **Modüler Yapı:** Konfigürasyon ve kod birbirinden ayrılmıştır (`params.yaml` ile yönetim).
 * **ROS 2 Control:** `FakeSystem` donanım arayüzü ile gerçekçi motor simülasyonu.
+* **Çok Objeli Görev Akışı:** Algılanan birden fazla obje sıraya alınır; robot önce objeye, sonra sınıfına göre belirlenen bırakma noktasına gider.
 
 ## 📂 Proje Yapısı
 
@@ -44,24 +45,32 @@ src/kinect_arm_control
 │   └── kol2.gif
 ├── launch
 │   ├── debug_brain.launch.py
+│   ├── debug_brain_queue.launch.py
 │   ├── manual_control.launch.py
+│   ├── multi_object_bringup.launch.py
 │   ├── start_system.launch.py
 │   └── system_bringup.launch.py
 ├── package.xml
 ├── resource
 │   └── kinect_arm_control
 ├── scripts
+│   ├── add_obstacle.py
 │   ├── detector_color.py
 │   ├── detector_yolo.py
+│   ├── detector_yolo_multi.py
 │   ├── eye_node_mobile.py
 │   ├── eye_node.py
 │   ├── __init__.py
+│   ├── reachability.py
 │   ├── robot_brain.py
+│   ├── stm_bridge.py
+│   ├── task_manager_node.py
 │   ├── teleop_terminal.py
 │   └── yolov8n.pt
 ├── src
-│   └── cpp_brain.cpp	
-│   └── dynamic_brain_node.cpp
+│   ├── cpp_brain.cpp
+│   ├── dynamic_brain_node.cpp
+│   └── dynamic_brain_node_queue.cpp
 └── test
     ├── test_copyright.py
     ├── test_flake8.py
@@ -92,7 +101,6 @@ src/my_custom_arm_moveit_config
 └── package.xml
 
 2 directories, 21 files
-
 ```
 
 ## 🛠️ Kullanılan Teknolojiler
@@ -152,10 +160,81 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src
 ros2 launch kinect_arm_control system_bringup.launch.py
 ```
 
+Çok Objeli Görev Sistemi:
+
+```bash
+source install/setup.bash
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/ros2_ws/src
+ros2 launch kinect_arm_control multi_object_bringup.launch.py
+```
+
 Kamera Olmadan Konum Gönderme:
 
 ```bash
 ros2 topic pub -1 /camera/target_coords geometry_msgs/msg/Point "{x: 0.40, y: 0.0, z: 0.2}"
 ```
+
+Kamera Olmadan Çok Objeli Sisteme Test Objesi Gönderme:
+
+```bash
+ros2 topic pub --once /detected_objects std_msgs/msg/Float32MultiArray "{data: [0.30, 0.0, 0.10, 0.90, 0.0]}"
+```
+
+Bu format şu şekildedir:
+
+```text
+[x, y, z, confidence, class_id]
+```
+
+Örnek olarak yukarıdaki komut:
+
+```text
+x = 0.30 m
+ y = 0.00 m
+ z = 0.10 m
+ confidence = 0.90
+ class_id = 0  # plastik
+```
+
+## 🧠 Çok Objeli Görev Mantığı
+
+Yeni görev akışında kamera bütün objeleri algılar, `task_manager_node.py` bu objeleri sıraya alır ve robot koluna tek tek hedef gönderir.
+
+```text
+YOLO / Kinect
+    ↓
+/detected_objects
+    ↓
+task_manager_node.py
+    ↓
+/camera/target_coords
+    ↓
+dynamic_brain_node_queue.cpp
+    ↓
+MoveIt + Gazebo/RViz
+    ↓
+/arm_motion_done
+```
+
+Temel hareket sırası:
+
+```text
+1. Obje konumuna git
+2. Objenin sınıfına göre belirlenen bırakma noktasına git
+3. Home / bekleme konumuna dön
+4. Sıradaki objeye geç
+```
+
+## ⚠️ Notlar
+
+* Eğer Gazebo açılmazsa arkada eski Gazebo süreci kalmış olabilir. Temizlemek için:
+
+```bash
+killall -9 gazebo gzserver gzclient rviz2 robot_state_publisher move_group spawn_entity.py 2>/dev/null
+ros2 daemon stop
+ros2 daemon start
+```
+
+* `best.pt` gibi YOLO model dosyaları büyük olabilir. GitHub 50 MB üstü dosyalar için uyarı verir. İleride bu dosyalar için Git LFS kullanılabilir.
 
 Geliştirici: [Mofxel1]
